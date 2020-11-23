@@ -23,7 +23,7 @@ mv_tags_denorm["relevance_rank"] = mv_tags_denorm["relevance_rank"].astype("int3
 
 mv_tags_list = (
     mv_tags_denorm[mv_tags_denorm.relevance_rank <= 100]
-    .groupby(["movieId", "title", "rating", "wr"])["tag"]
+    .groupby(["movieId", "title", "genres", "wr"])["tag"]
     .apply(lambda x: " ,".join(x))
     .reset_index()
 )
