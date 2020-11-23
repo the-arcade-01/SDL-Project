@@ -1,0 +1,3 @@
+Flask==1.1.2
+funk_svd==0.0.1.dev1
+pandas==1.1.4
