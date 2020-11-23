@@ -78,5 +78,7 @@ def weighted_rating(x):
 
 
 movies["wr"] = movies.apply(weighted_rating, axis=1)
+movies.drop('rating',axis=1,inplace=True)
+
 
 movies.to_pickle("mov1.pkl")
