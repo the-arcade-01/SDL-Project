@@ -59,7 +59,7 @@ def home():
 
 
 @app.route("/predict", methods=["POST"])
-def predict():
+def predict(name):
     """
     For rendering results on HTML GUI
     """
