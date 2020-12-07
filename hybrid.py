@@ -3,6 +3,8 @@ import pandas
 from flask import Flask, request, render_template, jsonify
 import gzip
 
+app = Flask(__name__)
+
 with open("mov1.pkl", "rb") as f1:
     movies = pickle.load(f1)
 
@@ -50,21 +52,59 @@ def hybrid(userId, title):
     return rec_mov.head(10)
 
 
-app = Flask(__name__)
+def moviesData(name):
+    base_url = f'https://api.themoviedb.org/3/search/movie?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&query={name}'
+    response = requests.get(base_url)
+    data = response.json()
+    results = data['results'][0]
+    path = results['poster_path']
+    if path:
+        new_path = "http://image.tmdb.org/t/p/w500"+path
+        results['poster_path'] = new_path
 
+    result = {'title':results['title'],'poster_path':results['poster_path'],'vote_average':results['vote_average'],'overview':results['overview']}
 
-@app.route("/")
-def home():
-    return render_template("index.html")
+    return result
 
-
-@app.route("/predict", methods=["POST"])
 def predict(name):
+    prediction = hybrid(165, name)
+    result = []
+    data_range = 6
+    if len(prediction) < 6:
+        data_range = len(prediction)
+
+    for i in range(data_range):
+        row = {
+            "name": prediction.loc[i, "title"]
+        }
+        result.append(row)
+
+    return result
+
+
+@app.route('/',methods = ['POST','GET'])
+def index():
+    if request.method == "POST":
+        name = request.form['name']
+
+        data = predict(name)
+
+        results = []
+
+        for item in data:
+            results.append(moviesData(item['name']))
+
+        return render_template('index.html',results = results)
+    else:
+        return render_template('index.html')
+
+
+@app.route("/api/<name>", methods=["POST","GET"])
+def api(name):
     """
     For rendering results on HTML GUI
     """
-    m_name = request.form["m_name"]
-    prediction = hybrid(165, m_name)
+    prediction = hybrid(165, name)
     result = []
     for i in range(10):
         row = {
