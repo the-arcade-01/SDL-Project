@@ -1,12 +1,10 @@
 import pickle
-import pandas
+import pandas,requests
 from flask import Flask, request, render_template, jsonify
 import gzip
 
 app = Flask(__name__)
 
-with open("mov1.pkl", "rb") as f1:
-    movies = pickle.load(f1)
 
 with open("mov2.pkl", "rb") as f2:
     mv_tags_list = pickle.load(f2)
@@ -23,34 +21,37 @@ links = pandas.read_csv(
 
 def hybrid(userId, title):
 
-    target_tag_list = mv_tags_list[
-        mv_tags_list.title.str.contains(title)
-    ].tag_list.values[0]
-    # mv_tags_list_sim is anew table prepared from mv_tags_list with given column names
-    mv_tags_list_sim = mv_tags_list[["movieId", "title", "genres", "tag_list", "wr"]]
+    taglist = mv_tags_list[mv_tags_list.title.str.contains(title, case=False)]
+    if not taglist.shape[0]:
+        return " empty "
+    else:
+        target_tag_list = taglist.tag_list.values[0]
+        # mv_tags_list_sim is anew table prepared from mv_tags_list with given column names
+        mv_tags_list_sim = mv_tags_list[
+            ["movieId", "title", "genres", "tag_list", "wr"]
+        ]
 
-    # mv_tags_list_sim['jaccard_sim'] will hold the jaccard similarity of any 2 values
-    mv_tags_list_sim["jaccard_sim"] = mv_tags_list_sim.tag_list.map(
-        lambda x: len(set(x).intersection(set(target_tag_list)))
-        / len(set(x).union(set(target_tag_list)))
-    )
+        # mv_tags_list_sim['jaccard_sim'] will hold the jaccard similarity of any 2 values
+        mv_tags_list_sim["jaccard_sim"] = mv_tags_list_sim.tag_list.map(
+            lambda x: len(set(x).intersection(set(target_tag_list)))
+            / len(set(x).union(set(target_tag_list)))
+        )
 
-    sim_scores = mv_tags_list_sim.sort_values(by="jaccard_sim", ascending=False).head(
-        10
-    )
+        sim_scores = mv_tags_list_sim.sort_values(
+            by="jaccard_sim", ascending=False
+        ).head(10)
 
-    movie_indices = [i for i in sim_scores["movieId"]]
+        movie_indices = [i for i in sim_scores["movieId"]]
 
-    rec_mov = mv_tags_list_sim.loc[mv_tags_list_sim["movieId"].isin(movie_indices)]
-    rec_mov = rec_mov.merge(links, on="movieId")
+        rec_mov = mv_tags_list_sim.loc[mv_tags_list_sim["movieId"].isin(movie_indices)]
+        rec_mov = rec_mov.merge(links, on="movieId")
 
-    rec_mov["est"] = [algo.predict_pair(userId, x) for x in movie_indices]
+        rec_mov["est"] = [algo.predict_pair(userId, x) for x in movie_indices]
 
-    # Sorting mv_tags_list_sim by jaccard similarity
-    rec_mov = rec_mov.sort_values("est", ascending=False)
+        # Sorting mv_tags_list_sim by jaccard similarity
+        rec_mov = rec_mov.sort_values("est", ascending=False)
 
-    return rec_mov.head(10)
-
+        return rec_mov.head(10)
 
 def moviesData(name):
     base_url = f'https://api.themoviedb.org/3/search/movie?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&query={name}'
@@ -63,7 +64,7 @@ def moviesData(name):
         results['poster_path'] = new_path
 
     result = {'title':results['title'],'poster_path':results['poster_path'],'vote_average':results['vote_average'],'overview':results['overview']}
-
+    print(result)
     return result
 
 def predict(name):
@@ -74,11 +75,20 @@ def predict(name):
         data_range = len(prediction)
 
     for i in range(data_range):
-        row = {
-            "name": prediction.loc[i, "title"]
+        namelist = prediction.loc[i,"title"].split(' ')[:-1]
+        name = ''
+
+        for j in range(len(namelist)):
+            if j == len(namelist)-1:
+                name += namelist[j]
+            else:
+                name += namelist[j]+" "
+
+        row ={
+            "name":name
         }
         result.append(row)
-
+    print(result)
     return result
 
 
