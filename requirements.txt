@@ -2,7 +2,6 @@ funk_svd==0.0.1.dev1
 Flask==1.1.2
 gunicorn==19.9.0
 Jinja2==2.10.1
-Werkzeug==0.15.5
 numpy>=1.9.2
 scipy>=0.15.1
 scikit-learn>=0.18
