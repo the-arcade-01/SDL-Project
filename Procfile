@@ -1,1 +1,1 @@
-web: gunicorn hybrid:app
+web: gunicorn app:app
