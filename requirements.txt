@@ -14,7 +14,7 @@ notebook==5.2.2
 Pillow==5.1.0
 requests==2.18.4
 requests-unixsocket==0.1.5
-urllib3==1.22
+urllib3==1.24.2
 Flask==1.1.2
 Flask-MySQL==1.5.1
 Jinja2==2.11.2
