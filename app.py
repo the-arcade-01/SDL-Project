@@ -14,9 +14,9 @@ with gzip.open("svd.pkl", "rb") as f:
     algo = p.load()
 
 
-links = pandas.read_csv(
-    "ml-latest/links.csv"
-)  # contains imdb, tmbd links for respective movies
+# links = pandas.read_csv(
+#     "ml-latest/links.csv"
+# )  # contains imdb, tmbd links for respective movies
 
 
 def hybrid(userId, title):
